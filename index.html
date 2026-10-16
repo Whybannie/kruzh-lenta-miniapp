@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Круж Лента</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Официальный SDK Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Экран загрузки -->
+        <div class="loading" id="loading">Загружаем кружочки...</div>
+        
+        <!-- Контейнер для ленты видео -->
+        <div class="video-container" id="video-container"></div>
+    </div>
+
+    <!-- Кнопка для отправки своего кружочка (вызов бота) -->
+    <button class="upload-btn" id="upload-btn">📤</button>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
