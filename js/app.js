@@ -1,90 +1,150 @@
-// Получаем доступ к Telegram Web App
 const tg = window.Telegram.WebApp;
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Инициализация
-    // Разворачиваем мини-апп на весь экран
-    tg.expand();
-    
-    // Сообщаем телеграму, что мы готовы
-    tg.ready();
-    
-    // Устанавливаем цвет шапки (чтобы было стильно)
-    tg.setHeaderColor('#000000');
-    
-    console.log("Круж Лента запущена!");
+// ТВОЯ РАБОЧАЯ ССЫЛКА ИЗ LOGS / API
+const API_BASE_RAW = "https://jun-puzzle-bone-rug.trycloudflare.com";
+const API_BASE = API_BASE_RAW.replace(/\/+$/, ""); // Убираем лишний слэш в конце
 
-    const loading = document.getElementById('loading');
-    const container = document.getElementById('video-container');
-    const uploadBtn = document.getElementById('upload-btn');
+document.addEventListener("DOMContentLoaded", () => {
+    // Инициализация Telegram Web App
+    if (tg && tg.initDataUnsafe) {
+        tg.expand();
+        tg.ready();
+        tg.setHeaderColor("#000000");
+    } else {
+        console.warn("Не открыто внутри Telegram, некоторые функции могут не работать.");
+    }
 
-    // ВРЕМЕННЫЕ ДАННЫЕ ДЛЯ ТЕСТА
-    // В будущем здесь будет запрос к твоему боту
-    const mockVideos = [
-        {
-            src: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            author: '@ivan_petrov',
-            desc: 'Когда понял, что завтра понедельник...'
-        },
-        {
-            src: 'https://www.w3schools.com/html/movie.mp4',
-            author: '@kruk_master',
-            desc: 'Тот самый момент, когда скинул кружочек в этот бот 😂'
+    const loading = document.getElementById("loading");
+    const container = document.getElementById("video-container");
+    const uploadBtn = document.getElementById("upload-btn");
+
+    // Проверка, не забыл ли пользователь заменить ссылку
+    if (API_BASE.includes("вставь-ссылку") || !API_BASE.startsWith("http")) {
+        loading.innerText = "Ошибка: Не задан API URL в коде.";
+        return;
+    }
+
+    // Intersection Observer для автоплея (как в TikTok)
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            const video = entry.target;
+            if (entry.isIntersecting) {
+                loadAndPlayVideo(video);
+            } else {
+                video.pause();
+            }
+        });
+    }, {
+        root: container,
+        threshold: 0.6
+    });
+
+    async function loadAndPlayVideo(videoElement) {
+        const fileId = videoElement.dataset.fileId;
+        if (!fileId) return;
+
+        // Если src уже есть, просто играем
+        if (videoElement.src && videoElement.src !== "") {
+            videoElement.play().catch(() => {});
+            return;
         }
-    ];
 
-    // Функция отрисовки ленты
-    function renderFeed(videos) {
-        loading.style.display = 'none';
+        // Строим ссылку на прокси-видео через наш API
+        // Важно: используем /api/video?file_id=...
+        const url = `${API_BASE}/api/video?file_id=${encodeURIComponent(fileId)}`;
         
-        videos.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'video-card';
+        videoElement.src = url;
+        videoElement.load();
+        
+        videoElement.oncanplay = () => {
+            videoElement.play().catch(err => console.log("Autoplay blocked:", err));
+        };
+    }
 
-            // Видео
-            const video = document.createElement('video');
-            video.src = item.src;
+    async function loadFeed() {
+        try {
+            loading.innerText = "Загружаем кружочки...";
+            
+            const response = await fetch(`${API_BASE}/api/videos`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const videos = await response.json();
+
+            if (!Array.isArray(videos)) {
+                loading.innerText = "Сервер вернул неверный формат данных";
+                console.error(videos);
+                return;
+            }
+
+            if (videos.length === 0) {
+                loading.innerText = "Лента пока пустая. Отправь первый кружочек боту!";
+                return;
+            }
+
+            renderFeed(videos);
+        } catch (e) {
+            console.error("Ошибка загрузки ленты:", e);
+            loading.innerText = "Ошибка подключения к серверу. Попробуй позже.";
+        }
+    }
+
+    function renderFeed(videos) {
+        loading.style.display = "none";
+        container.innerHTML = ""; // Очищаем контейнер
+
+        videos.forEach((item) => {
+            const card = document.createElement("div");
+            card.className = "video-card";
+
+            const video = document.createElement("video");
             video.loop = true;
             video.muted = true; // Обязательно для автоплея в браузерах
             video.playsInline = true;
-            
-            // Автоплей когда видео на экране
-            video.addEventListener('play', () => {
-                // Можно добавить счетчик просмотров здесь
-            });
+            video.setAttribute("playsinline", "");
+            video.preload = "metadata";
+            video.dataset.fileId = item.file_id;
 
-            // Оверлей с информацией
-            const overlay = document.createElement('div');
-            overlay.className = 'overlay';
+            // Обработка ошибок видео
+            video.onerror = () => {
+                const desc = card.querySelector(".description");
+                if (desc) desc.innerText = "❌ Ошибка загрузки видео";
+            };
+
+            const overlay = document.createElement("div");
+            overlay.className = "overlay";
             overlay.innerHTML = `
-                <span class="author">${item.author}</span>
-                <span class="description">${item.desc}</span>
+                <span class="author">@${item.username || "Аноним"}</span>
+                <span class="description">Круж Лента</span>
             `;
 
-            // Кнопки действий
-            const actions = document.createElement('div');
-            actions.className = 'action-buttons';
-            
-            const likeBtn = document.createElement('div');
-            likeBtn.className = 'like-btn';
-            likeBtn.innerHTML = '❤️';
+            const actions = document.createElement("div");
+            actions.className = "action-buttons";
+
+            const likeBtn = document.createElement("div");
+            likeBtn.className = "like-btn";
+            likeBtn.innerHTML = "❤️";
             likeBtn.onclick = (e) => {
                 e.stopPropagation();
-                handleLike();
+                handleLike(item.id);
             };
 
             actions.appendChild(likeBtn);
 
-            // Собираем карточку
             card.appendChild(video);
             card.appendChild(overlay);
             card.appendChild(actions);
             container.appendChild(card);
 
-            // Обработка тапа по видео (пауза/плей)
-            card.addEventListener('click', () => {
+            // Добавляем наблюдателя для этого конкретного видео
+            observer.observe(video);
+
+            // Клик по экрану: пауза/плей
+            card.addEventListener("click", () => {
                 if (video.paused) {
-                    video.play();
+                    loadAndPlayVideo(video);
                 } else {
                     video.pause();
                 }
@@ -92,27 +152,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Обработка лайка
-    function handleLike() {
-        // В будущем здесь будет отправка данных боту
-        // Например: tg.sendData('like_video_123');
-        console.log("Лайк отправлен!");
-        
-        // Вибрация (если поддерживается)
+    function handleLike(videoId) {
+        console.log("Лайк для видео ID:", videoId);
+        // Здесь можно добавить отправку данных боту позже
         if (tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred('light');
+            tg.HapticFeedback.impactOccurred("light");
         }
     }
 
-    // Обработка кнопки "Отправить кружочек"
-    uploadBtn.addEventListener('click', () => {
-        // Здесь можно открыть диалог с ботом или показать инструкцию
-        // В телеграме это часто делается через tg.openTelegramLink
-        alert('Чтобы попасть в ленту, отправь свой кружочек боту @Kruzh_Lenta_bot!');
-    });
+    // Кнопка загрузки своего кружка
+    if (uploadBtn) {
+        uploadBtn.addEventListener("click", () => {
+            if (tg.openTelegramLink) {
+                tg.openTelegramLink("https://t.me/Kruzh_Lenta_bot");
+            } else {
+                alert("Отправь свой кружочек боту @Kruzh_Lenta_bot!");
+            }
+        });
+    }
 
-    // Имитация загрузки данных (потом заменим на API)
-    setTimeout(() => {
-        renderFeed(mockVideos);
-    }, 800);
+    // Запуск
+    loadFeed();
 });
