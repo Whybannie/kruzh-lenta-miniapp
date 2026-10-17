@@ -1,0 +1,13 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body, html { height: 100%; width: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; color: white; }
+#app { height: 100vh; width: 100vw; position: relative; }
+.loading-screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: #000; z-index: 9999; transition: opacity 0.5s ease; }
+.loader-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: #3390ec; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.video-container { height: 100%; width: 100%; scroll-snap-type: y mandatory; overflow-y: scroll; scrollbar-width: none; }
+.video-container::-webkit-scrollbar { display: none; }
+.video-card { min-height: 100vh; width: 100%; scroll-snap-align: start; position: relative; background-color: #000; }
+video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.overlay-info { position: absolute; bottom: 80px; left: 20px; right: 80px; z-index: 10; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+.author-name { font-weight: bold; font-size: 18px; display: block; margin-bottom: 4px; }
+.upload-fab { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 56px; height: 56px; border-radius: 50%; background: #3390ec; border: none; color: white; font-size: 28px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
