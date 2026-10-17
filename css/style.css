@@ -1,18 +1,19 @@
-/* Сброс всех отступов */
+/* Сброс и базовые настройки */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Убираем подсветку при тапе на мобилках */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body, html {
     height: 100%;
     width: 100%;
-    overflow: hidden; /* Запрещаем обычный скролл страницы */
-    background-color: #000; /* Черный фон */
+    overflow: hidden;
+    background-color: #000;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    user-select: none; /* Запрещаем выделение текста */
+    user-select: none;
+    color: white;
 }
 
 #app {
@@ -22,123 +23,200 @@ body, html {
 }
 
 /* Экран загрузки */
-.loading {
+.loading-screen {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 16px;
-    z-index: 10;
-}
-
-/* Контейнер ленты с вертикальным скроллом */
-.video-container {
-    height: 100%;
-    width: 100%;
-    scroll-snap-type: y mandatory; /* Привязка скролла к элементам */
-    overflow-y: scroll;
-    display: flex;
-    flex-direction: column;
-    /* Скрываем скроллбары для чистоты */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none;  /* IE 10+ */
-}
-
-.video-container::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-}
-
-/* Карточка одного видео */
-.video-card {
-    height: 100vh; /* Занимает весь экран */
-    width: 100vw;
-    scroll-snap-align: start;
-    position: relative;
+    top: 0; left: 0; right: 0; bottom: 0;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: #000;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+.loader-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-left-color: #3390ec;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Контейнер ленты */
+.video-container {
+    height: 100%;
+    width: 100%;
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    scrollbar-width: none; /* Firefox */
+}
+
+.video-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* Карточка видео */
+.video-card {
+    min-height: 100vh;
+    width: 100%;
+    scroll-snap-align: start;
+    position: relative;
     background-color: #000;
+    overflow: hidden;
 }
 
 video {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Растягиваем видео на весь экран */
-    border-radius: 0;
+    object-fit: cover;
+    display: block;
+    background: #111;
 }
 
-/* Информационная плашка снизу */
-.overlay {
+/* Оверлей информации снизу */
+.overlay-info {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    color: white;
-    pointer-events: none; /* Чтобы клики проходили сквозь текст */
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    bottom: 80px; /* Место для кнопки upload */
+    left: 20px;
+    right: 80px; /* Место для кнопок справа */
+    z-index: 10;
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
-.overlay .author {
-    font-weight: bold;
-    font-size: 16px;
+.author-name {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 4px;
+    display: block;
 }
 
-.overlay .description {
+.video-desc {
     font-size: 14px;
     opacity: 0.9;
+    line-height: 1.4;
+    max-height: 60px;
+    overflow: hidden;
 }
 
-/* Кнопка лайка */
-.action-buttons {
+/* Панель действий справа */
+.actions-panel {
     position: absolute;
     right: 15px;
     bottom: 100px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
+    z-index: 20;
     align-items: center;
 }
 
-.like-btn {
-    background: rgba(255, 255, 255, 0.15);
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.action-btn:active {
+    transform: scale(0.85);
+}
+
+.icon-circle {
+    width: 45px;
+    height: 45px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 24px;
-    cursor: pointer;
-    transition: transform 0.1s;
-    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-.like-btn:active {
-    transform: scale(0.9);
+.count-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+    text-shadow: 0 1px 2px black;
 }
 
-/* Кнопка отправки своего кружочка (плавающая) */
-.upload-btn {
+/* Анимация сердечка при лайке */
+.like-icon.active .icon-circle {
+    background: #ff2b55;
+    border-color: #ff2b55;
+    box-shadow: 0 0 15px #ff2b55;
+}
+
+/* Плавающие сердечки (эффект двойного тапа) */
+.floating-heart {
+    position: absolute;
+    font-size: 60px;
+    color: #ff2b55;
+    pointer-events: none;
+    z-index: 100;
+    animation: floatUp 1s ease-out forwards;
+    filter: drop-shadow(0 0 10px rgba(255, 43, 85, 0.8));
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(0.5) rotate(-10deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-150px) scale(1.2) rotate(10deg);
+        opacity: 0;
+    }
+}
+
+/* Кнопка Upload внизу */
+.upload-fab {
     position: fixed;
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: #3390ec; /* Фирменный синий Телеграма */
+    background: linear-gradient(135deg, #3390ec, #1e6fbf);
     border: none;
-    font-size: 24px;
     color: white;
-    cursor: pointer;
-    z-index: 100;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-size: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(51, 144, 236, 0.4);
+    transition: all 0.3s ease;
+}
+
+.upload-fab:hover {
+    transform: translateX(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(51, 144, 236, 0.6);
+}
+
+.upload-fab:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* Индикатор прогресса свайпа */
+.scroll-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: #3390ec;
+    z-index: 9999;
+    transition: width 0.1s linear;
+    width: 0%;
 }
